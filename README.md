@@ -1,0 +1,1 @@
+# ucsc_course_assistant
