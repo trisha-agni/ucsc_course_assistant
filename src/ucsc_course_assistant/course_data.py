@@ -129,7 +129,21 @@ def build_index():
   # Stack the list of tensors into a single tensor
   all_course_embs = torch.stack([embed_text(t) for t in all_course_rag_text])
   return {
-      'courses': loaded_course_data,
-      'texts': all_course_rag_text,
-      'embeddings': all_course_embs,
+    'courses': loaded_course_data,
+    'texts': all_course_rag_text,
+    'embeddings': all_course_embs,
   }
+
+def save_course_data():
+  DATA_FILE_PATH.parent.mkdir(parents=True, exist_ok=True)
+  print(f"Saving course data to {DATA_FILE_PATH}")
+  nc = 0
+  with DATA_FILE_PATH.open("w", encoding="utf-8") as f:
+    for url in URLs:
+      d = parse_course_url(url)
+      f.write(json.dumps(d, ensure_ascii=False) + "\n")
+      nc += 1
+  print(f"Saved course data for {nc} courses.")
+
+if __name__ == "__main__":
+  save_course_data()
