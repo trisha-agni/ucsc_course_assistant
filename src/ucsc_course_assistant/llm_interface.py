@@ -1,5 +1,6 @@
 import ollama
 import os
+import streamlit as st
 from openai import OpenAI
 
 
@@ -8,7 +9,9 @@ OPENROUTER_MODEL_NAME = 'openai/gpt-oss-20b:free'
 OPENROUTER_API_KEY = os.getenv('OPENROUTER_API_KEY')
 OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1'
 
+#@st.cache_resource
 def get_free_model_ids():
+  print("calling get free model ids")
   import requests
 
   URL = "https://openrouter.ai/api/v1/models"
@@ -42,24 +45,22 @@ def _create_prompt(question, retrieved):
   return prompt
 
 USE_OPENROUTER = True
-
+orclient = None
 if USE_OPENROUTER and not OPENROUTER_API_KEY:
   raise RuntimeError('OPENROUTER_API_KEY is not set')
-
-orclient = OpenAI(
+elif orclient is not None:
+  orclient = OpenAI(
     base_url=OPENROUTER_BASE_URL,
     api_key=OPENROUTER_API_KEY,
-)
+  )
 
-def answer_with_ollama(question, retrieved):
-  prompt = _create_prompt(question, retrieved)
+def answer_with_ollama(question, prompt):
   response = ollama.chat(model=CHAT_MODEL_NAME,
                          messages=[{'role': 'user', 'content': prompt}],
                          options={'temperature': 0})
   return response['message']['content']
 
-def answer_with_openrouter(question, retrieved):
-  prompt = _create_prompt(question, retrieved)
+def answer_with_openrouter(question, prompt):
   last_err = None
   FREE_MODEL_IDS = get_free_model_ids()
   FREE_MODEL_IDS = [OPENROUTER_MODEL_NAME] + FREE_MODEL_IDS
@@ -81,7 +82,8 @@ def answer_with_openrouter(question, retrieved):
   raise last_err
 
 def answer_with_llm(question, retrieved):
+  prompt = _create_prompt(question, retrieved)
   if USE_OPENROUTER:
-    return answer_with_openrouter(question, retrieved)
+    return answer_with_openrouter(question, prompt)
   else:
-    return answer_with_ollama(question, retrieved)
+    return answer_with_ollama(question, prompt)

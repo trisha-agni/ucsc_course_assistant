@@ -94,15 +94,7 @@ def parse_course_url(url):
   _parse_extra_fields(soup, course_data)
   return course_data
 
-
 @st.cache_resource
-def get_course_data2():
-  all_course_data = []
-  for url in URLs:
-    d = parse_course_url(url)
-    all_course_data.append(d)
-  return all_course_data
-
 def get_course_data():
   with DATA_FILE_PATH.open("r", encoding="utf-8") as f:
     all_course_data = [json.loads(l) for l in f if l.strip()]

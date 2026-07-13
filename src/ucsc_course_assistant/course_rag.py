@@ -9,7 +9,6 @@ DEFAULT_NUM_RESULTS = 100
 def load_embedding_model():
   return SentenceTransformer(EMBEDDING_MODEL_NAME)
 
-@st.cache_resource
 def embed_text(text):
   embed_model = load_embedding_model()
   return embed_model.encode(text,
