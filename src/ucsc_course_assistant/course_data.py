@@ -1,8 +1,13 @@
+import json
 import requests
 import streamlit as st
 import torch
 from bs4 import BeautifulSoup, Tag
 from course_rag import embed_text
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+DATA_FILE_PATH = ROOT / "data" / "course_data.jsonl"
 
 URLs = [
     "https://catalog.ucsc.edu/en/current/general-catalog/courses/cse-computer-science-and-engineering/lower-division/cse-30",
@@ -91,11 +96,16 @@ def parse_course_url(url):
 
 
 @st.cache_resource
-def get_course_data():
+def get_course_data2():
   all_course_data = []
   for url in URLs:
     d = parse_course_url(url)
     all_course_data.append(d)
+  return all_course_data
+
+def get_course_data():
+  with DATA_FILE_PATH.open("r", encoding="utf-8") as f:
+    all_course_data = [json.loads(l) for l in f if l.strip()]
   return all_course_data
 
 def course_to_rag_text(d):

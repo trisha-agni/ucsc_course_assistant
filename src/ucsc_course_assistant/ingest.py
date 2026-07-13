@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from course_data import get_course_data, parse_course_url
+from course_data import parse_course_url
 
 ROOT = Path(__file__).resolve().parents[2]
 DATA_FILE_PATH = ROOT / "data" / "course_data.jsonl"
