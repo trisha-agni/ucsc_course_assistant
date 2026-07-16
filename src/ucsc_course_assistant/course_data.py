@@ -3,13 +3,19 @@ import requests
 import streamlit as st
 import torch
 from bs4 import BeautifulSoup, Tag
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from course_rag import embed_text
 from pathlib import Path
+from urllib.parse import urljoin
 
 ROOT = Path(__file__).resolve().parents[2]
 DATA_FILE_PATH = ROOT / "data" / "course_data.jsonl"
+FETCH_ALL_COURSES = True
+BASE_URL = "https://catalog.ucsc.edu/en/current/general-catalog/courses"
+COURSE_URL_SUBSTR = "/en/current/general-catalog/courses/"
+MAX_WORKERS = 32
 
-URLs = [
+TEST_URLs = [
     "https://catalog.ucsc.edu/en/current/general-catalog/courses/cse-computer-science-and-engineering/lower-division/cse-30",
     "https://catalog.ucsc.edu/en/current/general-catalog/courses/cmpm-computational-media/upper-division/cmpm-146",
     "https://catalog.ucsc.edu/en/current/general-catalog/courses/cse-computer-science-and-engineering/upper-division/cse-101",
@@ -126,16 +132,77 @@ def build_index():
     'embeddings': all_course_embs,
   }
 
+def _discover_urls(base_url):
+  html = requests.get(base_url, timeout=20).text
+  soup = BeautifulSoup(html, "html.parser")
+  urls = set()
+  for a in soup.select("a[href]"):
+    href = a["href"]
+    full_url = urljoin(base_url, href)
+    if COURSE_URL_SUBSTR in full_url:
+      urls.add(full_url)
+  return sorted(urls)
+
+def _get_course_urls():
+  if not FETCH_ALL_COURSES:
+    return TEST_URLs
+  dept_urls = _discover_urls(BASE_URL)
+  print(f"discovered {len(dept_urls)} course urls")
+  course_urls = set()
+  """for dept_url in dept_urls:
+    urls = _discover_urls(dept_url)
+    for url in urls:
+      course_urls.add(url)"""
+  with ThreadPoolExecutor(max_workers=MAX_WORKERS) as exexcutor:
+    future_to_dept = {exexcutor.submit(_discover_urls, dept_url): dept_url for dept_url in dept_urls}
+    for future in as_completed(future_to_dept):
+      dept_url = future_to_dept[future]
+      num_trials = 5
+      while num_trials > 0:
+        try:
+          urls = future.result()
+          course_urls.update(urls)
+          break
+        except Exception as e:
+          num_trials -= 1
+          if num_trials == 0:
+            print(f"skipped {dept_url} due to error: {e}")
+  print(f"discovered {len(course_urls)} course urls")
+  return sorted(course_urls)
+
 def save_course_data():
   DATA_FILE_PATH.parent.mkdir(parents=True, exist_ok=True)
   print(f"Saving course data to {DATA_FILE_PATH}")
   nc = 0
-  with DATA_FILE_PATH.open("w", encoding="utf-8") as f:
-    for url in URLs:
-      d = parse_course_url(url)
-      f.write(json.dumps(d, ensure_ascii=False) + "\n")
-      nc += 1
-  print(f"Saved course data for {nc} courses.")
+  course_urls = _get_course_urls()
+  parsed_results = []
+  """with DATA_FILE_PATH.open("w", encoding="utf-8") as f:
+      for url in course_urls:
+        d = parse_course_url(url)
+        f.write(json.dumps(d, ensure_ascii=False) + "\n")
+        nc += 1"""
+  with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+    future_to_url = {executor.submit(parse_course_url, url): url for url in course_urls}
+    for future in as_completed(future_to_url):
+      url = future_to_url[future]
+      num_trials = 5
+      while num_trials > 0:
+        try:
+          d = future.result()
+          parsed_results.append(d)
+          nc += 1
+          if nc % 500 == 0:
+            print(f"Parsed {nc} courses so far...")
+          break
+        except Exception as e:
+          num_trials -= 1
+          if num_trials == 0:
+            print(f"skipped {url} due to error: {e}")
+      parsed_results.sort(key=lambda x: x.get(URL_KEY, ""))
+      with DATA_FILE_PATH.open("w", encoding="utf-8") as f:
+        for d in parsed_results:
+          f.write(json.dumps(d, ensure_ascii=False) + "\n")
+  print(f"Saved course data for {len(parsed_results)} courses.")
 
 if __name__ == "__main__":
   save_course_data()
