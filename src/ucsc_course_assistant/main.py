@@ -10,7 +10,7 @@ def ask(question, index):
   retrieved = retrieve(question, index)
   for item in retrieved:
     print(item['score'], item['course'].get('Code'))
-    ans = answer_with_llm(question, retrieved)
+  ans = answer_with_llm(question, retrieved)
   return ans
 
 st.set_page_config(page_title="UCSC Course Assistant")

@@ -5,13 +5,18 @@ from openai import OpenAI
 
 
 CHAT_MODEL_NAME = 'llama3.1:8b'
-OPENROUTER_MODEL_NAME = 'openai/gpt-oss-20b:free'
+OPENROUTER_MODEL_NAMES = [
+  'openai/gpt-oss-120b:free',
+  'meta-llama/llama-3.3-70b-instruct:free',
+  'openai/gpt-oss-20b:free',
+  'meta-llama/llama-3.2-3b-instruct:free',
+  ]
 OPENROUTER_API_KEY = os.getenv('OPENROUTER_API_KEY')
 OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1'
+MAX_TOKENS = 1024
 
-#@st.cache_resource
+@st.cache_resource
 def get_free_model_ids():
-  print("calling get free model ids")
   import requests
 
   URL = "https://openrouter.ai/api/v1/models"
@@ -48,7 +53,7 @@ USE_OPENROUTER = True
 orclient = None
 if USE_OPENROUTER and not OPENROUTER_API_KEY:
   raise RuntimeError('OPENROUTER_API_KEY is not set')
-elif orclient is not None:
+elif OPENROUTER_API_KEY:
   orclient = OpenAI(
     base_url=OPENROUTER_BASE_URL,
     api_key=OPENROUTER_API_KEY,
@@ -63,7 +68,7 @@ def answer_with_ollama(question, prompt):
 def answer_with_openrouter(question, prompt):
   last_err = None
   FREE_MODEL_IDS = get_free_model_ids()
-  FREE_MODEL_IDS = [OPENROUTER_MODEL_NAME] + FREE_MODEL_IDS
+  FREE_MODEL_IDS = OPENROUTER_MODEL_NAMES + FREE_MODEL_IDS
   for model_id in FREE_MODEL_IDS:
     try:
       response = orclient.chat.completions.create(
@@ -71,7 +76,7 @@ def answer_with_openrouter(question, prompt):
           model=model_id,
           messages=[{'role': 'user', 'content': prompt}],
           temperature=0,
-          max_tokens=500,
+          max_tokens=MAX_TOKENS,
       )
       resp = response.choices[0].message.content
       if resp is not None:
