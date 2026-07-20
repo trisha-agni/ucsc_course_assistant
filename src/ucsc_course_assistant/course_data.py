@@ -10,6 +10,7 @@ from urllib.parse import urljoin
 
 ROOT = Path(__file__).resolve().parents[2]
 DATA_FILE_PATH = ROOT / "data" / "course_data.jsonl"
+INDEX_FILE_PATH = ROOT / "data" / "course_index.pt"
 FETCH_ALL_COURSES = True
 BASE_URL = "https://catalog.ucsc.edu/en/current/general-catalog/courses"
 COURSE_URL_SUBSTR = "/en/current/general-catalog/courses/"
@@ -101,10 +102,8 @@ def parse_course_url(url):
   return course_data
 
 @st.cache_resource
-def get_course_data():
-  with DATA_FILE_PATH.open("r", encoding="utf-8") as f:
-    all_course_data = [json.loads(l) for l in f if l.strip()]
-  return all_course_data
+def load_index():
+  return torch.load(INDEX_FILE_PATH, weights_only=False)
 
 def course_to_rag_text(d):
   return f"""
@@ -119,18 +118,6 @@ def course_to_rag_text(d):
   Source:
   {d.get(URL_KEY, '')}
   """
-
-@st.cache_resource
-def build_index():
-  loaded_course_data = get_course_data()
-  all_course_rag_text = [course_to_rag_text(d) for d in loaded_course_data]
-  # Stack the list of tensors into a single tensor
-  all_course_embs = torch.stack([embed_text(t) for t in all_course_rag_text])
-  return {
-    'courses': loaded_course_data,
-    'texts': all_course_rag_text,
-    'embeddings': all_course_embs,
-  }
 
 def _discover_urls(base_url):
   html = requests.get(base_url, timeout=20).text
@@ -170,6 +157,17 @@ def _get_course_urls():
   print(f"discovered {len(course_urls)} course urls")
   return sorted(course_urls)
 
+def _save_index(loaded_course_data):
+  all_course_rag_text = [course_to_rag_text(d) for d in loaded_course_data]
+  # Stack the list of tensors into a single tensor
+  all_course_embs = torch.stack([embed_text(t) for t in all_course_rag_text])
+  index = {
+    'courses': loaded_course_data,
+    'texts': all_course_rag_text,
+    'embeddings': all_course_embs,
+  }
+  torch.save(index, INDEX_FILE_PATH)
+
 def save_course_data():
   DATA_FILE_PATH.parent.mkdir(parents=True, exist_ok=True)
   print(f"Saving course data to {DATA_FILE_PATH}")
@@ -198,10 +196,11 @@ def save_course_data():
           num_trials -= 1
           if num_trials == 0:
             print(f"skipped {url} due to error: {e}")
-      parsed_results.sort(key=lambda x: x.get(URL_KEY, ""))
-      with DATA_FILE_PATH.open("w", encoding="utf-8") as f:
-        for d in parsed_results:
-          f.write(json.dumps(d, ensure_ascii=False) + "\n")
+    parsed_results.sort(key=lambda x: x.get(URL_KEY, ""))
+    with DATA_FILE_PATH.open("w", encoding="utf-8") as f:
+      for d in parsed_results:
+        f.write(json.dumps(d, ensure_ascii=False) + "\n")
+    _save_index(parsed_results)
   print(f"Saved course data for {len(parsed_results)} courses.")
 
 if __name__ == "__main__":

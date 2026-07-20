@@ -1,6 +1,6 @@
 import streamlit as st
 from llm_interface import answer_with_llm
-from course_data import build_index
+from course_data import load_index
 from course_rag import retrieve
 from dotenv import load_dotenv
 
@@ -16,7 +16,7 @@ def ask(question, index):
 st.set_page_config(page_title="UCSC Course Assistant")
 st.title("UCSC Course Assistant")
 
-index = build_index()
+index = load_index()
 
 question = st.text_input("Enter your question:")
 if question:

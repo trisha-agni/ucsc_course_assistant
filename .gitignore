@@ -12,3 +12,4 @@ dist/
 .ipynb_checkpoints/
 .env
 .DS_Store
+course_index.pt
