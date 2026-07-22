@@ -17,12 +17,12 @@ COURSE_URL_SUBSTR = "/en/current/general-catalog/courses/"
 MAX_WORKERS = 32
 
 TEST_URLs = [
-    "https://catalog.ucsc.edu/en/current/general-catalog/courses/cse-computer-science-and-engineering/lower-division/cse-30",
-    "https://catalog.ucsc.edu/en/current/general-catalog/courses/cmpm-computational-media/upper-division/cmpm-146",
-    "https://catalog.ucsc.edu/en/current/general-catalog/courses/cse-computer-science-and-engineering/upper-division/cse-101",
-    "https://catalog.ucsc.edu/en/current/general-catalog/courses/stat-statistics/upper-division/stat-131",
-    "https://catalog.ucsc.edu/en/current/general-catalog/courses/cse-computer-science-and-engineering/lower-division/cse-40",
-    "https://catalog.ucsc.edu/en/current/general-catalog/courses/cse-computer-science-and-engineering/lower-division/cse-12",
+    "https://catalog.ucsc.edu/en/current/general-catalog/courses/cse-computer-science-and-engineering/lower-division/cse-30",  # noqa: E501
+    "https://catalog.ucsc.edu/en/current/general-catalog/courses/cmpm-computational-media/upper-division/cmpm-146",  # noqa: E501
+    "https://catalog.ucsc.edu/en/current/general-catalog/courses/cse-computer-science-and-engineering/upper-division/cse-101",  # noqa: E501
+    "https://catalog.ucsc.edu/en/current/general-catalog/courses/stat-statistics/upper-division/stat-131",  # noqa: E501
+    "https://catalog.ucsc.edu/en/current/general-catalog/courses/cse-computer-science-and-engineering/lower-division/cse-40",  # noqa: E501
+    "https://catalog.ucsc.edu/en/current/general-catalog/courses/cse-computer-science-and-engineering/lower-division/cse-12",  # noqa: E501
 ]
 
 URL_KEY = "URL"
@@ -32,6 +32,7 @@ DESC_KEY = "Description"
 REQ_KEY = "Requirements"
 GEN_ED_KEY = "General Education Code"
 CREDITS_KEY = "Credits"
+
 
 def clean(txt):
   text = ' '.join(txt.split())
@@ -47,12 +48,14 @@ def clean(txt):
     text = text.replace(old, new)
   return text
 
+
 def _create_soup(url):
   resp = requests.get(url, timeout=20)
   resp.raise_for_status()
   soup = BeautifulSoup(resp.text, 'html.parser')
   soup = soup.select_one('main') or soup.body or soup
   return soup
+
 
 def _parse_heading(soup, course_data):
   h1 = soup.find('h1')
@@ -65,12 +68,14 @@ def _parse_heading(soup, course_data):
   course_data[CODE_KEY] = code
   course_data[TITLE_KEY] = title
 
+
 def _parse_desc(soup, course_data):
   desc = soup.select_one(".desc")
   if not desc:
     course_data[DESC_KEY] = ""
     return
   course_data[DESC_KEY] = clean(desc.get_text(" ", strip=True))
+
 
 def _parse_extra_fields(soup, course_data):
   all_fields = soup.select('div.extraFields') + soup.select('div.genEd')
@@ -93,6 +98,7 @@ def _parse_extra_fields(soup, course_data):
         values.append(text)
     course_data[key] = ' '.join(values)
 
+
 def parse_course_url(url):
   soup = _create_soup(url)
   course_data = {URL_KEY: url}
@@ -101,9 +107,11 @@ def parse_course_url(url):
   _parse_extra_fields(soup, course_data)
   return course_data
 
+
 @st.cache_resource
 def load_index():
   return torch.load(INDEX_FILE_PATH, weights_only=False)
+
 
 def course_to_rag_text(d):
   return f"""
@@ -119,6 +127,7 @@ def course_to_rag_text(d):
   {d.get(URL_KEY, '')}
   """
 
+
 def _discover_urls(base_url):
   html = requests.get(base_url, timeout=20).text
   soup = BeautifulSoup(html, "html.parser")
@@ -129,6 +138,7 @@ def _discover_urls(base_url):
     if COURSE_URL_SUBSTR in full_url:
       urls.add(full_url)
   return sorted(urls)
+
 
 def _get_course_urls():
   if not FETCH_ALL_COURSES:
@@ -141,7 +151,7 @@ def _get_course_urls():
     for url in urls:
       course_urls.add(url)"""
   with ThreadPoolExecutor(max_workers=MAX_WORKERS) as exexcutor:
-    future_to_dept = {exexcutor.submit(_discover_urls, dept_url): dept_url for dept_url in dept_urls}
+    future_to_dept = {exexcutor.submit(_discover_urls, url): url for url in dept_urls}
     for future in as_completed(future_to_dept):
       dept_url = future_to_dept[future]
       num_trials = 5
@@ -157,6 +167,7 @@ def _get_course_urls():
   print(f"discovered {len(course_urls)} course urls")
   return sorted(course_urls)
 
+
 def _save_index(loaded_course_data):
   all_course_rag_text = [course_to_rag_text(d) for d in loaded_course_data]
   # Stack the list of tensors into a single tensor
@@ -167,6 +178,7 @@ def _save_index(loaded_course_data):
     'embeddings': all_course_embs,
   }
   torch.save(index, INDEX_FILE_PATH)
+
 
 def save_course_data():
   DATA_FILE_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -202,6 +214,7 @@ def save_course_data():
         f.write(json.dumps(d, ensure_ascii=False) + "\n")
     _save_index(parsed_results)
   print(f"Saved course data for {len(parsed_results)} courses.")
+
 
 if __name__ == "__main__":
   save_course_data()

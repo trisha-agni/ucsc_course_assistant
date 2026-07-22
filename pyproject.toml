@@ -5,6 +5,7 @@ description = "UCSC course assistant"
 requires-python = ">=3.14"
 dependencies = [
 	"beautifulsoup4",
+	"flake8",
 	"python-dotenv",
 	"openai",
 	"requests",
@@ -13,3 +14,6 @@ dependencies = [
 	"torch",
 	"streamlit",
 ]
+
+[tool.flake8]
+max-line-length = 89

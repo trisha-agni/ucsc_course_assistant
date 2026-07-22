@@ -15,6 +15,7 @@ OPENROUTER_API_KEY = os.getenv('OPENROUTER_API_KEY')
 OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1'
 MAX_TOKENS = 1024
 
+
 @st.cache_resource
 def get_free_model_ids():
   import requests
@@ -31,6 +32,7 @@ def get_free_model_ids():
     if id.endswith(':free'):
       FREE_MODEL_IDS.append(id)
   return FREE_MODEL_IDS
+
 
 def _create_prompt(question, retrieved):
   context = '\n\n-----\n\n'.join(item['text'] for item in retrieved)
@@ -49,6 +51,7 @@ def _create_prompt(question, retrieved):
   """.strip()
   return prompt
 
+
 USE_OPENROUTER = True
 orclient = None
 if USE_OPENROUTER and not OPENROUTER_API_KEY:
@@ -59,11 +62,13 @@ elif OPENROUTER_API_KEY:
     api_key=OPENROUTER_API_KEY,
   )
 
+
 def answer_with_ollama(question, prompt):
   response = ollama.chat(model=CHAT_MODEL_NAME,
                          messages=[{'role': 'user', 'content': prompt}],
                          options={'temperature': 0})
   return response['message']['content']
+
 
 def answer_with_openrouter(question, prompt):
   last_err = None
@@ -72,7 +77,7 @@ def answer_with_openrouter(question, prompt):
   for model_id in FREE_MODEL_IDS:
     try:
       response = orclient.chat.completions.create(
-          #model=OPENROUTER_MODEL_NAME,
+          # model=OPENROUTER_MODEL_NAME,
           model=model_id,
           messages=[{'role': 'user', 'content': prompt}],
           temperature=0,
@@ -85,6 +90,7 @@ def answer_with_openrouter(question, prompt):
       last_err = e
       print('Error: model: ', model_id)
   raise last_err
+
 
 def answer_with_llm(question, retrieved):
   prompt = _create_prompt(question, retrieved)
