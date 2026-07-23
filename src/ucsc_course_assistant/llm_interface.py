@@ -63,14 +63,14 @@ elif OPENROUTER_API_KEY:
   )
 
 
-def answer_with_ollama(question, prompt):
+def answer_with_ollama(prompt):
   response = ollama.chat(model=CHAT_MODEL_NAME,
                          messages=[{'role': 'user', 'content': prompt}],
                          options={'temperature': 0})
   return response['message']['content']
 
 
-def answer_with_openrouter(question, prompt):
+def answer_with_openrouter(prompt):
   last_err = None
   FREE_MODEL_IDS = get_free_model_ids()
   FREE_MODEL_IDS = OPENROUTER_MODEL_NAMES + FREE_MODEL_IDS
@@ -95,6 +95,6 @@ def answer_with_openrouter(question, prompt):
 def answer_with_llm(question, retrieved):
   prompt = _create_prompt(question, retrieved)
   if USE_OPENROUTER:
-    return answer_with_openrouter(question, prompt)
+    return answer_with_openrouter(prompt)
   else:
-    return answer_with_ollama(question, prompt)
+    return answer_with_ollama(prompt)
