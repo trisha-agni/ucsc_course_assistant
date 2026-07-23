@@ -128,6 +128,11 @@ def course_to_rag_text(d):
   """
 
 
+def format_course_sources(course_scores):
+  return '\n'.join(
+    f'- {d[CODE_KEY]} {d[TITLE_KEY]} (score: {course_score:.4f}): {d[URL_KEY]}'
+    for d, course_score in course_scores
+  )
 def _discover_urls(base_url):
   html = requests.get(base_url, timeout=20).text
   soup = BeautifulSoup(html, "html.parser")
