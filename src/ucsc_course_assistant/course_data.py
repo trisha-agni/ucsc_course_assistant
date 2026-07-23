@@ -99,7 +99,7 @@ def _parse_extra_fields(soup, course_data):
     course_data[key] = ' '.join(values)
 
 
-def parse_course_url(url):
+def _parse_course_url(url):
   soup = _create_soup(url)
   course_data = {URL_KEY: url}
   _parse_heading(soup, course_data)
@@ -188,11 +188,11 @@ def save_course_data():
   parsed_results = []
   """with DATA_FILE_PATH.open("w", encoding="utf-8") as f:
       for url in course_urls:
-        d = parse_course_url(url)
+        d = _parse_course_url(url)
         f.write(json.dumps(d, ensure_ascii=False) + "\n")
         nc += 1"""
   with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-    future_to_url = {executor.submit(parse_course_url, url): url for url in course_urls}
+    future_to_url = {executor.submit(_parse_course_url, url): url for url in course_urls}
     for future in as_completed(future_to_url):
       url = future_to_url[future]
       num_trials = 5
