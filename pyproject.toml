@@ -6,13 +6,16 @@ requires-python = ">=3.14"
 dependencies = [
 	"beautifulsoup4",
 	"flake8",
-	"python-dotenv",
+	"langchain-core",
+	"langchain-openrouter",
+	"langgraph",
+	"ollama",
 	"openai",
+	"python-dotenv",
 	"requests",
 	"sentence-transformers",
-	"ollama",
-	"torch",
 	"streamlit",
+	"torch",
 ]
 
 [tool.flake8]
