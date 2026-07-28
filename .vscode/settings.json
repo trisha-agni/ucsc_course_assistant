@@ -1,3 +1,9 @@
 {
-  "python.terminal.useEnvFile": true
+  "python.terminal.useEnvFile": true,
+  "python.defaultInterpreterPath": "/Users/trishaagnihotri/ucsc_course_assistant/.venv/bin/python",
+  "python.terminal.activateEnvironment": true,
+  "python.analysis.extraPaths": [
+    "/Users/trishaagnihotri/ucsc_course_assistant/src",
+    "/Users/trishaagnihotri/ucsc_course_assistant/.venv/lib/python3.14/site-packages"
+  ]
 }
