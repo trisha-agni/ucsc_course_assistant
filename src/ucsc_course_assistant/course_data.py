@@ -1,12 +1,16 @@
+# External Imports
 import json
 import requests
 import streamlit as st
 import torch
 from bs4 import BeautifulSoup, Tag
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from course_rag import embed_text
 from pathlib import Path
 from urllib.parse import urljoin
+
+# Internal Imports
+from ucsc_course_assistant.course_rag import embed_text
+
 
 ROOT = Path(__file__).resolve().parents[2]
 DATA_FILE_PATH = ROOT / "data" / "course_data.jsonl"
@@ -133,6 +137,8 @@ def format_course_sources(course_scores):
     f'- {d[CODE_KEY]} {d[TITLE_KEY]} (score: {course_score:.4f}): {d[URL_KEY]}'
     for d, course_score in course_scores
   )
+
+
 def _discover_urls(base_url):
   html = requests.get(base_url, timeout=20).text
   soup = BeautifulSoup(html, "html.parser")

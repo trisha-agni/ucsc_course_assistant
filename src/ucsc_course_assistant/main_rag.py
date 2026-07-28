@@ -16,6 +16,7 @@ def ask(question, index):
   ans = answer_with_llm(question, retrieved)
   return ans, format_course_sources(course_scores)
 
+
 st.set_page_config(page_title="UCSC Course Assistant")
 st.title("UCSC Course Assistant")
 

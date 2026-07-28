@@ -2,10 +2,10 @@
 from langchain_core.tools import tool
 import json
 # Internal Imports
-from course_data import (
+from ucsc_course_assistant.course_data import (
     CODE_KEY, TITLE_KEY, DESC_KEY, REQ_KEY, CREDITS_KEY, URL_KEY, GEN_ED_KEY
 )
-from course_rag import retrieve
+from ucsc_course_assistant.course_rag import retrieve
 
 _RAG_INDEX = None
 
@@ -40,6 +40,6 @@ def search_courses(query: str, k: int = 5) -> str:
 
 
 def get_tools():
-    return [
+    return (
         search_courses,
-    ]
+    )
