@@ -1,17 +1,25 @@
 # External Imports
+from dotenv import load_dotenv
 from langchain_core.messages import SystemMessage
 from langchain_openrouter import ChatOpenRouter
 from langgraph.graph import MessagesState, StateGraph, START
 from langgraph.prebuilt import ToolNode, tools_condition
+import os
 # Internal Imports
 from ucsc_course_assistant.agent.prompts import SYSTEM_PROMPT
 from ucsc_course_assistant.agent.tools import get_tools
+
+load_dotenv()
+OPENROUTER_API_KEY = os.getenv('OPENROUTER_API_KEY', '')
+has_key = bool(OPENROUTER_API_KEY)
+assert has_key
 
 
 def _create_llm(model_name):
     return ChatOpenRouter(
         model=model_name,
         temperature=0,
+        openrouter_api_key=OPENROUTER_API_KEY,
     ).bind_tools(get_tools())
 
 
