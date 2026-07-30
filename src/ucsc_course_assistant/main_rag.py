@@ -1,7 +1,7 @@
 import streamlit as st
-from llm_interface import answer_with_llm
-from course_data import format_course_sources, load_index
-from course_rag import retrieve
+from ucsc_course_assistant.llm_interface import answer_with_llm
+from ucsc_course_assistant.course_data import format_course_sources, load_index
+from ucsc_course_assistant.course_rag import retrieve
 from dotenv import load_dotenv
 
 load_dotenv()

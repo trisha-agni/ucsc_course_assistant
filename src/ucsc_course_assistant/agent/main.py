@@ -1,10 +1,17 @@
 # External Imports
 from langchain_core.messages import HumanMessage
+import logging
 import streamlit as st
 # Internal Imports
 from ucsc_course_assistant.agent.graph import build_agent
+from ucsc_course_assistant.agent.logger_config import setup_logging
 from ucsc_course_assistant.course_data import load_index
 from ucsc_course_assistant.agent.tools import set_index
+
+# initialize logging once at startup
+setup_logging()
+logger = logging.getLogger(__name__)
+logger.info('Running agent...')
 
 MODELS = (
     'nvidia/nemotron-3-ultra-550b-a55b:free',
@@ -14,19 +21,19 @@ MODELS = (
     # 'meta-llama/llama-3.2-3b-instruct:free',
 )
 
+def run():
+    rag_index = load_index()
+    set_index(rag_index)
 
-rag_index = load_index()
-set_index(rag_index)
-
-model_name = st.selectbox("Select a model:", MODELS, index=0)
-agent = build_agent(model_name)
-question = st.text_input("Ask a course question")
-if question:
-    result = agent.invoke({
-        'messages': [HumanMessage(content=question)],
-    })
-    st.write(result['messages'][-1].content)
+    model_name = st.selectbox("Select a model:", MODELS, index=0)
+    agent = build_agent(model_name)
+    question = st.text_input("Ask a course question")
+    if question:
+        result = agent.invoke({
+            'messages': [HumanMessage(content=question)],
+        })
+        st.write(result['messages'][-1].content)
 
 
-if __name__ == "___main__":
-    pass
+if __name__ == "__main__":
+    run()

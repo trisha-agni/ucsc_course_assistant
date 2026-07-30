@@ -4,10 +4,14 @@ from langchain_core.messages import SystemMessage
 from langchain_openrouter import ChatOpenRouter
 from langgraph.graph import MessagesState, StateGraph, START
 from langgraph.prebuilt import ToolNode, tools_condition
+import logging
 import os
 # Internal Imports
 from ucsc_course_assistant.agent.prompts import SYSTEM_PROMPT
 from ucsc_course_assistant.agent.tools import get_tools
+
+# named logger using the module path hierarchy
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 OPENROUTER_API_KEY = os.getenv('OPENROUTER_API_KEY', '')
