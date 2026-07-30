@@ -3,7 +3,7 @@ import torch
 from sentence_transformers import SentenceTransformer
 
 EMBEDDING_MODEL_NAME = 'sentence-transformers/all-MiniLM-L6-v2'
-DEFAULT_NUM_RESULTS = 100
+DEFAULT_NUM_RESULTS = 32
 
 
 @st.cache_resource
