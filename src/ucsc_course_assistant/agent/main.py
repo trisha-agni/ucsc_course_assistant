@@ -21,7 +21,25 @@ MODELS = (
     # 'meta-llama/llama-3.2-3b-instruct:free',
 )
 
+
+def _write_result_to_log(result):
+    for msg in result['messages']:
+        logger.info(f"\n--- {msg.type} ---")
+        logger.info(f"content: {msg.content}")
+
+        if hasattr(msg, "tool_calls") and msg.tool_calls:
+            logger.info(f"tool_calls: {msg.tool_calls}")
+
+        if msg.type == "tool":
+            logger.info(f"tool_call_id: {msg.tool_call_id}")
+            logger.info(f"tool_name: {msg.name}")
+
+
 def run():
+    
+    st.set_page_config(page_title="UCSC Course Assistant")
+    st.title("UCSC Course Assistant")
+
     rag_index = load_index()
     set_index(rag_index)
 
@@ -33,7 +51,7 @@ def run():
             'messages': [HumanMessage(content=question)],
         })
         st.write(result['messages'][-1].content)
-
+        _write_result_to_log(result)
 
 if __name__ == "__main__":
     run()
