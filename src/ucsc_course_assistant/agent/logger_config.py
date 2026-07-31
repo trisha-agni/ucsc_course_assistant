@@ -7,6 +7,17 @@ import sys
 
 LOGS_DIR_NAME = 'logs'
 
+
+def _setup_logger_levels(logger):
+    logger.setLevel(logging.INFO)
+    # --- SILENCE THIRD-PARTY JUNK LOGS ---
+    # Mute noisy HTTP request logging from OpenRouter/LangChain API calls
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+    # Mute local CPU/GPU hardware notices from the embedding models
+    logging.getLogger("sentence_transformers").setLevel(logging.WARNING)
+    # Completely suppress unauthenticated HF_TOKEN download warnings
+    logging.getLogger("huggingface_hub").setLevel(logging.ERROR)
+
 def setup_logging():
     """Configure centralized logging for the entire app"""
     logger = logging.getLogger('')
@@ -14,6 +25,7 @@ def setup_logging():
     # duplicate logs)
     if logger.handlers:
         return logger
+    _setup_logger_levels(logger)
     logger.setLevel(logging.INFO)
 
     log_format = "%(asctime)s - [%(levelname)s] - %(name)s - %(message)s"
