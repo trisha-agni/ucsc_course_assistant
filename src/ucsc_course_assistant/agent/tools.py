@@ -1,5 +1,6 @@
 # External Imports
 from langchain_core.tools import tool
+from pydantic import BaseModel, Field
 import json
 # Internal Imports
 from ucsc_course_assistant.course_data import (
@@ -14,13 +15,35 @@ def set_index(rag_index):
     global _RAG_INDEX
     _RAG_INDEX = rag_index
 
+
 def get_index():
     if _RAG_INDEX is None:
         raise RuntimeError("Course index is not initialized.")
     return _RAG_INDEX
 
-@tool
-def search_courses(query: str, k: int = 5) -> str:
+
+# The base class containing fields shared by ALL tools
+class BaseToolInput(BaseModel):
+    reasoning: str = Field(
+        ...,
+        description=(
+            "CRITICAL: Explicitly explain your rationale "
+            "for executing this specific tool call."
+        )
+    )
+
+
+class SearchCoursesInput(BaseToolInput):
+    query: str = Field(
+        ...,
+        description=(
+            "The course search or filter query string, e.g., 'CSE 101'."
+        )
+    )
+
+
+@tool(args_schema=SearchCoursesInput)
+def search_courses(query: str, reasoning: str, k: int = 5) -> str:
     """
     Search UCSC courses by topic, course name, or natural language query.
     """

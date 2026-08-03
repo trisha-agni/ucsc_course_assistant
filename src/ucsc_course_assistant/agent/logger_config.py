@@ -18,6 +18,7 @@ def _setup_logger_levels(logger):
     # Completely suppress unauthenticated HF_TOKEN download warnings
     logging.getLogger("huggingface_hub").setLevel(logging.ERROR)
 
+
 def setup_logging():
     """Configure centralized logging for the entire app"""
     logger = logging.getLogger('')

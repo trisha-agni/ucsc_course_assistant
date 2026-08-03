@@ -36,7 +36,6 @@ def _write_result_to_log(result):
 
 
 def run():
-    
     st.set_page_config(page_title="UCSC Course Assistant")
     st.title("UCSC Course Assistant")
 
@@ -52,6 +51,7 @@ def run():
         })
         st.write(result['messages'][-1].content)
         _write_result_to_log(result)
+
 
 if __name__ == "__main__":
     run()
